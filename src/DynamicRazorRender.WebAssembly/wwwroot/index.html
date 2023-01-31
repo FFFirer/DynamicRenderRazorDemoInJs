@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <title>DynamicRazorRender.WebAssembly</title>
+    <base href="/" />
+    <link href="css/app.css" rel="stylesheet" />
+    <link href="_content/Masa.Blazor/css/masa-blazor.min.css" rel="stylesheet" />
+    <link href="_content/Masa.Blazor/css/masa-blazor.min.css" rel="stylesheet" />
+    <link href="https://cdn.masastack.com/npm/@mdi/font@5.x/css/materialdesignicons.min.css" rel="stylesheet">
+    <link href="https://cdn.masastack.com/npm/materialicons/materialicons.css" rel="stylesheet">
+    <link href="https://cdn.masastack.com/npm/fontawesome/v5.0.13/css/all.css" rel="stylesheet">
+    
+    <!-- If you add any scoped CSS files, uncomment the following to load them
+    <link href="DynamicRazorRender.WebAssembly.styles.css" rel="stylesheet" /> -->
+
+    <style>
+        .hide {
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="app">
+        <button type="button" class="button" onclick="Run()">刷新</button>
+
+        <div class="input-container">
+            <textarea id="code-area" type="text" class="input-box" placeholder="请输入执行代码"></textarea>
+        </div>
+    
+        <render-razor></render-razor>
+    </div>
+    
+    <script src="/_content/Microsoft.AspNetCore.Components.CustomElements/BlazorCustomElements.js"></script>    <script src="_framework/blazor.webassembly.js"></script>  
+    <script src="_content/BlazorComponent/js/blazor-component.js"></script>
+    <script src="https://cdn.masastack.com/npm/sortable/Sortable.min.js"></script>
+    <script src="/main.js"></script>
+
+</body>
+
+</html>

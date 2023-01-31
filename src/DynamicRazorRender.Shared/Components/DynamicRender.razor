@@ -1,0 +1,63 @@
+﻿@using DynamicRazorRender.Shared;
+@using Microsoft.JSInterop;
+@using Masa.Blazor.Extensions.Languages.Razor;
+@using Microsoft.AspNetCore.Components;
+
+@inject KeyEventBus<string> _envetBus;
+@inject IJSRuntime _jsRuntime;
+@inject IServiceProvider _serviceProvider;
+
+
+@if (componentType == null)
+{
+    <h1>Hello World!</h1>
+}
+else
+{
+    <MApp>
+        <DynamicComponent Type="componentType"></DynamicComponent>
+    </MApp>
+}
+
+@code {
+    
+    private Type? componentType;
+
+    protected override Task OnInitializedAsync()
+    {
+    // 订阅编译事件
+        _envetBus.Subscription(EventConstants.RenderComponent, async (value) =>
+        {
+            try
+            {
+                componentType = RazorCompile.CompileToType(
+                    new CompileRazorOptions
+                    {
+                        Code = value,
+                        ConcurrentBuild = false
+                    }
+                    );
+
+                _ = InvokeAsync(StateHasChanged);
+            }
+            catch (System.Exception ex)
+            {
+                await _jsRuntime.InvokeVoidAsync(
+                    "window.postMessage",
+                    new
+                    {
+                        type = "error",
+                        message = ex.Message,
+                        details = ex.ToString()
+                    }
+                    );
+
+                componentType = null;
+            }
+        });
+
+        // bootstrap/masa 单独处理
+        
+        return base.OnInitializedAsync();
+    }
+}
