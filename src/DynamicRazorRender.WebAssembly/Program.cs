@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 
-builder.RootComponents.RegisterCustomElement<DynamicRender>("render-razor");
+builder.RootComponents.RegisterAsCustomElement<DynamicRender>("render-razor");
 
 builder.RootComponents.Add<HeadOutlet>("head::after");
 
