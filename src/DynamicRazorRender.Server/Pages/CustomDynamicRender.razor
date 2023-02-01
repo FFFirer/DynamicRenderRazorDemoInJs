@@ -1,0 +1,87 @@
+@using DynamicRazorRender.Shared;
+@using Microsoft.JSInterop;
+@using Masa.Blazor.Extensions.Languages.Razor;
+@using Microsoft.AspNetCore.Components;
+@inherits DynamicRender
+
+@if (componentType == null)
+{
+    <h1>1 Hello World!</h1>
+}
+else
+{
+    <MApp>
+        <DynamicComponent Type="componentType"></DynamicComponent>
+    </MApp>
+}
+
+@code {
+    protected override void RegisterEventBus()
+    {
+        _eventBus.Subscription(CustomEventConstants.RenderFromFile, async (filepath) => {
+            try 
+            {
+                if(string.IsNullOrWhiteSpace(filepath))
+                {
+                    throw new ArgumentNullException(nameof(filepath), "路径为空");
+                }
+
+                if(!File.Exists(filepath)){
+                    throw new FileNotFoundException("文件不存在", filepath);
+                }
+
+                string? code;
+                using(var stream = new FileStream(filepath, FileMode.Open, FileAccess.Read))
+                {
+                    using(var reader = new StreamReader(stream))
+                    {
+                        code = await reader.ReadToEndAsync();
+                    }
+                }
+                        
+                CompileCode(code);
+            }
+            catch(Exception ex)
+            {
+                await PostError(ex);
+            }
+        });
+
+        _eventBus.Subscription(CustomEventConstants.RenderFromPlain, async (plainText) => {
+            try
+            {
+                CompileCode(plainText);
+            }
+            catch(Exception ex)
+            {
+                await PostError(ex);
+            }   
+        });
+    }
+
+    protected void CompileCode(string code){
+        componentType = RazorCompile.CompileToType(
+            new CompileRazorOptions{
+                Code = code,
+                ConcurrentBuild = false,
+            }
+        );
+
+        _ = InvokeAsync(StateHasChanged);
+    }
+
+    protected async Task PostError(Exception ex){
+        await _jsRuntime.InvokeVoidAsync(
+            "window.postMessage",
+            new {
+                type = "error",
+                message = ex.Message,
+                details = ex.ToString()
+            }
+        );
+    }
+}
+@* #pragma warning restore 1998
+#nullable restore
+#line 4 "d:/Playground/repos/DynamicRenderRazorDemoInJs/src/DynamicRazorRender.Server/Pages/CustomDynamicRender.razor" *@
+

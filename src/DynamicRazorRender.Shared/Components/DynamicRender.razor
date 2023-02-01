@@ -3,14 +3,14 @@
 @using Masa.Blazor.Extensions.Languages.Razor;
 @using Microsoft.AspNetCore.Components;
 
-@inject KeyEventBus<string> _envetBus;
-@inject IJSRuntime _jsRuntime;
-@inject IServiceProvider _serviceProvider;
+@* @inject KeyEventBus<string> _envetBus; *@
+@* @inject IJSRuntime _jsRuntime; *@
+@* @inject IServiceProvider _serviceProvider; *@
 
 
 @if (componentType == null)
 {
-    <h1>Hello World!</h1>
+    <h1>1 Hello World!</h1>
 }
 else
 {
@@ -21,12 +21,21 @@ else
 
 @code {
     
-    private Type? componentType;
+    protected Type? componentType;
 
-    protected override Task OnInitializedAsync()
+    [Inject]
+    protected KeyEventBus<string> _eventBus { get; set; } = default!;
+
+    [Inject]
+    protected IJSRuntime _jsRuntime { get; set; } = default!;
+
+    [Inject]
+    protected IServiceProvider _serviceProvider { get; set; } = default!;
+
+    protected virtual void RegisterEventBus()
     {
-    // 订阅编译事件
-        _envetBus.Subscription(EventConstants.RenderComponent, async (value) =>
+        // 订阅编译事件
+        _eventBus.Subscription(EventConstants.RenderComponent, async (value) =>
         {
             try
             {
@@ -57,7 +66,11 @@ else
         });
 
         // bootstrap/masa 单独处理
-        
+    }
+
+    protected override Task OnInitializedAsync()
+    {
+        RegisterEventBus();
         return base.OnInitializedAsync();
     }
 }

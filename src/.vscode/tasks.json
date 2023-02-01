@@ -14,6 +14,18 @@
             "problemMatcher": "$msCompile"
         },
         {
+            "label": "build",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "build",
+                "${workspaceFolder}/DynamicRazorRender.Server/DynamicRazorRender.Server.csproj",
+                "/property:GenerateFullPaths=true",
+                "/consoleloggerparameters:NoSummary"
+            ],
+            "problemMatcher": "$msCompile"
+        },
+        {
             "label": "publish",
             "command": "dotnet",
             "type": "process",
@@ -34,6 +46,18 @@
                 "run",
                 "--project",
                 "${workspaceFolder}/DynamicRazorRender.WebAssembly/DynamicRazorRender.WebAssembly.csproj"
+            ],
+            "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "watch",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "watch",
+                "run",
+                "--project",
+                "${workspaceFolder}/DynamicRazorRender.Server/DynamicRazorRender.Server.csproj"
             ],
             "problemMatcher": "$msCompile"
         }
