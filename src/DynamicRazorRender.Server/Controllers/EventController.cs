@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using DynamicRazorRender.Shared;
 using DynamicRazorRender.Server.Filters;
+using DynamicRazorRender.Server.Events;
 
 namespace DynamicRazorRender.Server.Controllers
 {
@@ -11,11 +12,13 @@ namespace DynamicRazorRender.Server.Controllers
     {
         private readonly ILogger<EventController> _logger;
         private readonly KeyEventBus<string> _eventBus;
+        private readonly EventBus<string> _eventCenter;
 
-        public EventController(ILogger<EventController> logger, KeyEventBus<string> eventBus)
+        public EventController(ILogger<EventController> logger, KeyEventBus<string> eventBus, EventBus<string> eventCenter)
         {
             _logger = logger;
             _eventBus = eventBus;
+            _eventCenter = eventCenter;
         }
 
         [HttpPost]
@@ -27,7 +30,7 @@ namespace DynamicRazorRender.Server.Controllers
         [HttpPost]
         public async Task RenderPlain([FromBody] RenderPlainRequest request)
         {
-            await InternalRenderFromPlain(request.Content);
+            await InternalRenderFromPlain(request.PlainText);
         }
 
         [HttpPost]
@@ -48,29 +51,27 @@ namespace DynamicRazorRender.Server.Controllers
             await result;
         }
 
-        protected async Task InternalRenderFromFile(string? filePath)
+        protected Task InternalRenderFromFile(string? filePath)
         {
-            if (string.IsNullOrWhiteSpace(filePath))
+            if (!string.IsNullOrWhiteSpace(filePath)
+                && System.IO.File.Exists(filePath))
             {
-                return;
+                _eventCenter.Emit(CustomEventConstants.RenderFromFile, filePath);
             }
 
-            if (!System.IO.File.Exists(filePath))
-            {
-                return;
-            }
-
-            await _eventBus.PushAsync(CustomEventConstants.RenderFromFile, filePath);
+            return Task.CompletedTask;
         }
 
-        protected async Task InternalRenderFromPlain(string? plainText)
+        protected Task InternalRenderFromPlain(string? plainText)
         {
             if (plainText == null)
             {
                 plainText = string.Empty;
             }
 
-            await _eventBus.PushAsync(CustomEventConstants.RenderFromPlain, plainText);
+            _eventCenter.EmitAsync(CustomEventConstants.RenderFromPlain, plainText);
+
+            return Task.CompletedTask;
         }
     }
 }

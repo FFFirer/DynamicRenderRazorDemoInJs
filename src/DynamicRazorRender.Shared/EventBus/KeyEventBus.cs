@@ -31,9 +31,9 @@ namespace DynamicRazorRender.Shared
             else
             {
                 _concurrentDictionary.TryAdd(name, new List<Action<T>>()
-            {
-                func
-            });
+                {
+                    func
+                });
             }
         }
 

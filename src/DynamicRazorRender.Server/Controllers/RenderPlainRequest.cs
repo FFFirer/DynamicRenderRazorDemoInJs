@@ -4,7 +4,7 @@ namespace DynamicRazorRender.Server.Controllers
 {
     public class RenderPlainRequest
     {
-        [JsonPropertyName("content")]
-        public string? Content { get; set; }
+        [JsonPropertyName("plainText")]
+        public string? PlainText { get; set; }
     }
 }

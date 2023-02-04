@@ -1,3 +1,4 @@
+using DynamicRazorRender.Server.Events;
 using DynamicRazorRender.Server.Filters;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
@@ -8,11 +9,14 @@ builder.Services.AddControllers(options => {
     options.Filters.Add<HttpResponseExceptionFilter>();
 });
 
+builder.Logging.ClearProviders().AddConsole();
+
 // Add services to the container.
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
 
 builder.Services.AddDynamicRazorRenderShared(codeEnvironment: DynamicRazorRender.Shared.CodeEnvironment.Server);
+builder.Services.AddSingleton(typeof(EventBus<>));
 
 var app = builder.Build();
 
@@ -24,7 +28,7 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
-app.UseHttpsRedirection();
+// app.UseHttpsRedirection();
 
 app.UseStaticFiles();
 
