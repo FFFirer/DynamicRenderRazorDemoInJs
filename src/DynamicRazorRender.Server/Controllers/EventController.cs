@@ -11,13 +11,12 @@ namespace DynamicRazorRender.Server.Controllers
     public class EventController : ControllerBase
     {
         private readonly ILogger<EventController> _logger;
-        private readonly KeyEventBus<string> _eventBus;
+
         private readonly EventBus<string> _eventCenter;
 
-        public EventController(ILogger<EventController> logger, KeyEventBus<string> eventBus, EventBus<string> eventCenter)
+        public EventController(ILogger<EventController> logger, EventBus<string> eventCenter)
         {
             _logger = logger;
-            _eventBus = eventBus;
             _eventCenter = eventCenter;
         }
 

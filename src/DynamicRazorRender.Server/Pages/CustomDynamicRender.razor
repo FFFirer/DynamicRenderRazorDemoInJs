@@ -7,7 +7,16 @@
 
 @if (componentType == null)
 {
-    <h1>Loading...</h1>
+    @if(CompileError){
+        <pre>
+            <code>
+                @CompileErrorMessage
+            </code>
+        </pre>
+    }
+    else{
+        <h1>Loading...</h1>
+    }
 }
 else
 {
@@ -17,6 +26,7 @@ else
 }
 
 @code {
+    private IJSObjectReference? _jsModule;
 
     protected Type? componentType;
 
@@ -32,70 +42,83 @@ else
     [Inject]
     private ILogger<CustomDynamicRender>? _logger { get; set; }
 
+    private bool CompileError { get; set; } = false;
+    private string CompileErrorMessage { get; set; } = string.Empty;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if(firstRender)
+        {
+            _jsModule = await _jsRuntime!.InvokeAsync<IJSObjectReference>("import", "./Pages/CustomDynamicRender.razor.js");
+                
+            await _jsModule!.InvokeVoidAsync("emitPageLoaded"); // 页面第一次渲染完成发出信号
+        }
+
+    }
+
     protected override void OnInitialized()
     {
         RegisterEventBus();
         base.OnInitialized();
     }
 
-    private List<Subscription?> subscriptions {get;set;} = new List<Subscription?>();
+    private List<Subscription?> subscriptions { get; set; } = new List<Subscription?>();
 
     protected void RegisterEventBus()
     {        
         var subscription1 = _eventCenter?.Subscribe(CustomEventConstants.RenderFromFile, async (filepath) => {
-            try 
+            if(string.IsNullOrWhiteSpace(filepath))
             {
-                if(string.IsNullOrWhiteSpace(filepath))
-                {
-                    throw new ArgumentNullException(nameof(filepath), "路径为空");
-                }
+                throw new ArgumentNullException(nameof(filepath), "路径为空");
+            }
 
-                if(!File.Exists(filepath)){
-                    throw new FileNotFoundException("文件不存在", filepath);
-                }
+            if(!File.Exists(filepath)){
+                throw new FileNotFoundException("文件不存在", filepath);
+            }
 
-                string? code;
-                using(var stream = new FileStream(filepath, FileMode.Open, FileAccess.Read))
+            string? code;
+            using(var stream = new FileStream(filepath, FileMode.Open, FileAccess.Read))
+            {
+                using(var reader = new StreamReader(stream))
                 {
-                    using(var reader = new StreamReader(stream))
-                    {
-                        code = await reader.ReadToEndAsync();
-                    }
+                    code = await reader.ReadToEndAsync();
                 }
+            }
                         
-                CompileCode(code);
-            }
-            catch(Exception ex)
-            {
-                _logger?.LogWarning(ex.ToString());
-                await PostError(ex);
-            }
+            await CompileCode(code);
         });
 
         this.subscriptions.Add(subscription1);
 
         var subscription2 =  _eventCenter?.Subscribe(CustomEventConstants.RenderFromPlain, async (plainText) => {
-            try
-            {
-                CompileCode(plainText);
-            }
-            catch(Exception ex)
-            {
-                await PostError(ex);
-            }   
+            await CompileCode(plainText);
         });
 
         this.subscriptions.Add(subscription2);
     }
 
-    protected void CompileCode(string code){
-        componentType = RazorCompile.CompileToType(
-            new CompileRazorOptions{
-                Code = code,
-                ConcurrentBuild = false,
-            }
-        );
+    protected async Task CompileCode(string code)
+    {
+        try 
+        {
+            componentType = RazorCompile.CompileToType(
+                new CompileRazorOptions{
+                    Code = code,
+                    ConcurrentBuild = false,
+                }
+            );
 
+            CompileError = false;
+            CompileErrorMessage = string.Empty;
+        }
+        catch(Exception ex)
+        {
+            CompileError = true;
+            CompileErrorMessage = ex.ToString();
+            _logger?.LogError(ex, "编译组件失败");     
+            await PostError(ex);
+        }
+        
         _ = InvokeAsync(StateHasChanged);
     }
 
